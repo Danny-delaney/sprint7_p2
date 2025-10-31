@@ -4,17 +4,14 @@
   import { tweened } from 'svelte/motion';
   import { linear } from 'svelte/easing';
 
-  $: items = $itemsStore as Item[]; 
-  
+  $: items = $itemsStore as Item[];
   let completedCount = 0; 
   $: itemsTotal = items.length; 
   let percentComplete = 0;
-
   const animatedPercent = tweened(0, {
     duration: 1000,
     easing: linear
   });
-  
   function handleSubmit()
   {
     completedCount = $completedStore;
@@ -22,7 +19,8 @@
     animatedPercent.set(percentComplete);
   }
 
-  $: barWidth = `${$animatedPercent}%`; 
+  $: barWidth = `${$animatedPercent}%`;
+  $: indicatorClass = percentComplete >= 80 ? 'indicator-line-reached' : 'indicator-line-default';
 </script>
 
 <h2>Checklist Progress</h2>
@@ -40,6 +38,12 @@
 </ul>
 
 <div class="progress-bar-container" data-testid="progress-bar-container">
+  <div 
+    class="indicator-line {indicatorClass}" 
+    style="left: 80%;"
+    data-testid="indicator-80-percent"
+  ></div>
+
   <div 
     class="progress-bar-snap"
     style="width: {percentComplete}%;"
@@ -150,5 +154,24 @@
       font-size: 10px;
       top: -22px;
     }
+  }
+
+  .indicator-line {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%); 
+    height: 100%;
+    width: 3px; 
+    opacity: 1;
+    z-index: 10;
+    transition: background-color 0.3s ease; 
+  }
+
+  .indicator-line-default {
+    background-color: #9e9e9e; 
+  }
+
+  .indicator-line-reached {
+    background-color: #4CAF50;
   }
 </style>
