@@ -51,6 +51,18 @@
     style="width: {barWidth};"
     data-testid="progress-bar-animated"
   ></div>
+
+  <!-- ✅ Milestone ticks overlay (aria-hidden, tooltips on hover) -->
+  <div class="milestones" aria-hidden="true">
+    {#each [25, 50, 75, 100] as m}
+      <span
+        class="tick"
+        style={`left:${m}%`}
+        data-label={`${m}% milestone`}
+        title={`${m}% milestone`}
+      />
+    {/each}
+  </div>
 </div>
 
 <p data-testid="progress-summary">
@@ -89,5 +101,54 @@
     height: 100%;
     background-color: #03a9f4;
     transition: width 0s;
+  }
+
+  /* === Milestones (minimal, scoped) === */
+  .milestones {
+    position: absolute;
+    inset: 0;            /* cover the bar */
+    z-index: 2;          /* ensure ticks sit above the bars */
+    pointer-events: none;
+  }
+
+  .milestones .tick {
+    position: absolute;
+    top: 0;
+    bottom: 0;           /* full bar height */
+    width: 2px;
+    background: currentColor;
+    opacity: 0.6;
+    transform: translateX(-50%);
+    pointer-events: auto; /* enable hover for the tooltip */
+  }
+
+  .milestones .tick::after {
+    content: attr(data-label);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: -26px;          /* above the bar */
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.12s ease;
+    pointer-events: none; /* tooltip itself shouldn't capture events */
+  }
+
+  .milestones .tick:hover::after {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  @media (max-width: 420px) {
+    .milestones .tick::after {
+      font-size: 10px;
+      top: -22px;
+    }
   }
 </style>
