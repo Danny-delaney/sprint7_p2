@@ -1,50 +1,93 @@
-<script>
+<script lang="ts">
   import ChecklistItem from '$lib/ChecklistItem.svelte';
+  import { itemsStore, completedStore, percentStore, type Item } from '../stores';
+  import { tweened } from 'svelte/motion';
+  import { linear } from 'svelte/easing';
 
-  // Example checklist items
-  let items = [
-    { id: 1, label: 'Item 1', done: false },
-    { id: 2, label: 'Item 2', done: false },
-    { id: 3, label: 'Item 3', done: false },
-    { id: 4, label: 'Item 4', done: false },
-    { id: 5, label: 'Item 5', done: false },
-  ];
+  $: items = $itemsStore as Item[]; 
+  
+  let completedCount = 0; 
+  $: itemsTotal = items.length; 
+  let percentComplete = 0;
 
-  // Track current checkbox states independently
-  let currentStates = items.map(i => i.done);
-
-  // Progress label state (updates on Submit)
-  let completedCount = 0;
-
-  // Called whenever a checkbox changes
-  function handleItemChange(event, index) {
-    currentStates[index] = event.detail.done;
+  const animatedPercent = tweened(0, {
+    duration: 1000,
+    easing: linear
+  });
+  
+  function handleSubmit()
+  {
+    completedCount = $completedStore;
+    percentComplete = $percentStore;
+    animatedPercent.set(percentComplete);
   }
 
-  // Called on Submit to calculate completion
-  function handleSubmit() {
-    completedCount = currentStates.filter(done => done).length;
-  }
+  $: barWidth = `${$animatedPercent}%`; 
 </script>
 
 <h2>Checklist Progress</h2>
 
 <ul>
-  {#each items as item, index}
+  {#each items as item}
     <li>
       <ChecklistItem
         id={item.id}
         label={item.label}
-        done={currentStates[index]}
-        on:change={(e) => handleItemChange(e, index)}
+        done={item.done} 
       />
     </li>
   {/each}
 </ul>
 
-<p>
-  Completed: {completedCount}/{items.length} 
-  ({Math.round((completedCount / items.length) * 100)}%)
+<div class="progress-bar-container" data-testid="progress-bar-container">
+  <div 
+    class="progress-bar-snap"
+    style="width: {percentComplete}%;"
+    data-testid="progress-bar-snap"
+  ></div>
+  
+  <div 
+    class="progress-bar-animated"
+    style="width: {barWidth};"
+    data-testid="progress-bar-animated"
+  ></div>
+</div>
+
+<p data-testid="progress-summary">
+  Completed: {completedCount}/{itemsTotal} 
+  ({percentComplete}%)
 </p>
 
-<button on:click={handleSubmit}>Submit version</button>
+<button on:click={handleSubmit} data-testid="submit-button">Submit version</button>
+
+<style>
+  .progress-bar-container
+  {
+    height: 20px;
+    background-color: #eee;
+    margin-bottom: 20px;
+    position: relative;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-bar-snap
+  {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: #b3e5fc;
+    transition: width 0s;
+  }
+
+  .progress-bar-animated
+  {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: #03a9f4;
+    transition: width 0s;
+  }
+</style>
